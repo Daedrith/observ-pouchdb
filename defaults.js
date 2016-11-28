@@ -4,6 +4,7 @@ export default {
   db: null, // a PouchDB instance
   ObservArray: null, // constructor for an observable array
   ObservValue: null, // constructor for an observable value
+  ObservVarhash: null,  // constructor for an observable object (variable keys)
   // optional, but recommended:
   errorHandler: null,
 };

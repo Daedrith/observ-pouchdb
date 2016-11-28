@@ -2,26 +2,27 @@
 
 import defaultOpts from './defaults';
 
-function KeyArray(disposeSignal, opts)
+function DocHash(disposeSignal, opts)
 {
   opts = Object.assign({}, defaultOpts, opts);
   
-  let { ObservArray, ObservValue, db, errorHandler } = opts;
-  let observ = ObservArray([]);
+  let { ObservValue, ObservVarhash, db, errorHandler } = opts;
+  let observ = ObservVarhash({}, ObservValue);
   
+  let queryOpts = Object.assign({ include_docs: true }, opts.queryOpts);
+
   if (opts.prefix)
   {
-    opts.startkey = opts.prefix;
-    opts.endkey = opts.prefix + '\uffff';
-    opts.inclusive_end = true;
+    queryOpts.startkey = opts.prefix;
+    queryOpts.endkey = opts.prefix + '\uffff';
+    queryOpts.inclusive_end = true;
   }
   
-  let queryOpts = Object.assign({ include_docs: true }, opts);
   observ.ready = db.allDocs(queryOpts)
     .then(
       res =>
       {
-        observ.set(res.rows.map(d => ObservValue(d.doc)));
+        for (let d of res.rows) observ.put(d.id, d.doc);
         
         let changes = db.changes({ live: true, include_docs: true, since: 'now' })
           .on('change', c =>
@@ -33,20 +34,9 @@ function KeyArray(disposeSignal, opts)
               return;
             }
             
-            let ind;
-            observ.some((d, i) =>
-            {
-              if (d()._id === c.id)
-              {
-                ind = i;
-                return true;
-              }
-            });
-
-            if (c.deleted) observ.splice(ind, 1);
-            else if (ind != null) observ.get(ind).set(c.doc);
-            // insert in order?
-            else observ.push(ObservValue(c.doc));
+            
+            if (c.deleted) observ.delete(c.id);
+            else observ.put(c.id, c.doc);
           });
         
         if (errorHandler) changes.on('error', errorHandler);
@@ -62,5 +52,5 @@ function KeyArray(disposeSignal, opts)
   return observ;
 }
 
-export default KeyArray;
+export default DocHash;
 export var __useDefault = true;

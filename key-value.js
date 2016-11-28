@@ -9,9 +9,9 @@ function KeyValue(id, disposeSignal, opts)
   
   let { defaultValue, ObservValue, db, errorHandler } = opts;
   let val = ObservValue(defaultValue);
-  
+
   val.ready = db
-    .get(id, opts)
+    .get(id, opts.queryOpts || {})
     .then(doc =>
           {
             val.set(doc);
