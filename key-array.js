@@ -9,14 +9,15 @@ function KeyArray(disposeSignal, opts)
   let { ObservArray, ObservValue, db, errorHandler } = opts;
   let observ = ObservArray([]);
   
+  let queryOpts = Object.assign({ include_docs: true }, opts.queryOpts);
+
   if (opts.prefix)
   {
-    opts.startkey = opts.prefix;
-    opts.endkey = opts.prefix + '\uffff';
-    opts.inclusive_end = true;
+    queryOpts.startkey = opts.prefix;
+    queryOpts.endkey = opts.prefix + '\uffff';
+    queryOpts.inclusive_end = true;
   }
   
-  let queryOpts = Object.assign({ include_docs: true }, opts);
   observ.ready = db.allDocs(queryOpts)
     .then(
       res =>
